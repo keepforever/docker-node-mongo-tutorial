@@ -1,18 +1,18 @@
-## Docker Compose notes from Traversy Media video: 
+## Docker Compose notes from Traversy Media video:
 #### https://www.youtube.com/watch?v=hP77Rua1E0c&t=208s
 
-### Note, when you create a Dockerfile, you do not specify a file extension.  No dot at the beginning either. 
-### Should be in your root directory, same level as your package .json.
+### Note, when you create a Dockerfile, you do not specify a file extension. No dot at the beginning either.
+### You should be in your root directory when running these commands, same level as your package .json.
 
 ### Main Dockerfile
 
 ```
-# My personal notes begin with "#", but this is not 
-actually how you note things in a Dockerfile. And they 
-# must be removed prior to running. 
+# My personal notes begin with "#", but this is not
+# actually how you note things in a Dockerfile. And they
+# must be removed prior to running.
 
-# we could do 'FROM node: latest' but we run the risk of breaking chanes
-# down the line with updates.  Instead we specify a stable version. This might 
+# we could do 'FROM node: latest' but we run the risk of breaking changes
+# down the line with updates.  Instead we specify a stable version. This might
 # be the docker image.  
 FROM node:10
 
@@ -20,56 +20,58 @@ FROM node:10
 # I think this is arbitrary..
 WORKDIR /usr/src/app
 
-# we need to move the package.json and package-lock.json to the working 
-# adding a " * " to the end of package in the COPY command acts as way to say: 
+# we need to move the package.json and package-lock.json to the working
+# adding a " * " to the end of package in the COPY command acts as way to say:
 # grab every file that starts with 'package' of the '.json' file extension
 COPY package*.json ./
 
 # to install dependencies listed in the package.json files
 RUN npm install
 
-# copy everything else in the root directory... 
+# copy everything else in the root directory...
 COPY . .
 
-# we expose 3000 because that's the port the application runs on. 
+# we expose 3000 because that's the port the application runs on.
 # and is specified on line 36 of the index.js file
 EXPOSE 3000
 
-# start command is in array form, same as "npm start" in when you 
+# start command is in array form, same as "npm start" in when you
 # run an app locally.  Specified in the scripts property from package.json
-# file. 
+# file.
 CMD ["npm", "start"]
-
 ```
+
 # Docker Compose
-### this file serves the same purpouse as running:
+### this file serves the same purpose as running:
+
 ```
 $ docker run -p [other options... ] -v ${pwd}:site some/image
 ```
-### can, and will, run this command multiple times for the various 
-### containers our application is intended to be COMPOSED of.
 
+### can, and will, run this command multiple times for the various
+### containers our application is intended to be COMPOSED of.
 ## docker-compose.yml
+
 ```
-# must remove notes before running, all lines prefixed with " # ". 
+# must remove notes before running, all lines prefixed with " # ".
 
 # docker version
 version: '3'
 
 # these are all the containers we would otherwise be using 'docker run ... '
-# to instanciate the containers that compose our app. 
+# to instantiate the containers that compose our app.
 services:
   # indentation is important. 2 spaces.
-  # 'app' is arbitrary. 
+  # 'app' is arbitrary.
   app:
-    # 'docker-node-mongo' is the arbitrary name of the node app's container. 
+    # 'docker-node-mongo' is the arbitrary name of the node app's container.
     container_name: docker-node-mongo
-    # if container fails, 'always' try to restart. 
+    # if container fails, 'always' try to restart.
     restart: always
-    # we want to build from our dockerfile, we put " . " and that will look 
-    # in the current dir for a Dockerfile 
+    # we want to build from our dockerfile, we put " . " and that will look
+    # in the current dir for a Dockerfile
     build: .
-    # in:  - '80:3000', ' - ' is a way to go to a new line for readability. 
+    # in:  - '80:3000', ' - ' is a way to go to a new line for readability.
     ports:
       # since our app runs on 3000 we map 80(local machine's default) to 3000
       - '80:3000'
@@ -79,21 +81,20 @@ services:
   mongo:
     # name is arbitrary
     container_name: mongo
-    # this image stands in place of " build: . " in the app config above. 
+    # this image stands in place of " build: . " in the app config above.
     # the difference being that we are building this container from the image on
-    # docker hub and the app we are building according to the config in Dockerfile, 
+    # docker hub and the app we are building according to the config in Dockerfile,
     image: mongo
-    # the dafault port and the port we want exposed (and other apps to access via) 
+    # the dafault port and the port we want exposed (and other apps to access via)
     # are the standard mongo 21017
     ports:
       - '27017:27017'
 ```
 
-
 ## index.js (node app)
-#### an example of how the app container would interact with the mongo 
-#### container. 'mongo:27017' is the container_name and port# as specified 
-#### in the docker-compose file.  
+#### an example of how the app container would interact with the mongo
+#### container. 'mongo:27017' is the container_name and port# as specified
+#### in the docker-compose file.
 
 ```
 // Connect to MongoDB
@@ -104,10 +105,25 @@ mongoose
   )
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.log(err));
+```
+### once the Dockerfile (for the node app) and the docker-compose.yml
+### file are in order, navigate to root dir and run:
 
 ```
+$ docker-compose up -d
+```
+
+##### adding "-d" starts in detached mode, runs in background.
+### this will execute your docker-compose.yml file and launch
+### the containers in a network.
+
+## Note:
+### because we mapped the app port like: 80:3000 that means
+### we need to visit https://localhost, (not 3000, because port 80
+### is the dafualt and accessed at https://localhost)
 
 # Eveything below here is boiler markdown for use above.
+
 ### Docker version info
 
 ```
